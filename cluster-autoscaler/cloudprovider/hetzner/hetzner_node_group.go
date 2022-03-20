@@ -347,10 +347,14 @@ func serverTypeAvailable(manager *hetznerManager, instanceType string, region st
 }
 
 func createServer(n *hetznerNodeGroup) error {
+	cloudInit, err := n.manager.cloudInitFunc()
+	if err != nil {
+		return fmt.Errorf("cloud init invalid: %w", err)
+	}
 	StartAfterCreate := true
 	opts := hcloud.ServerCreateOpts{
 		Name:             newNodeName(n),
-		UserData:         n.manager.cloudInit,
+		UserData:         cloudInit,
 		Location:         &hcloud.Location{Name: n.region},
 		ServerType:       &hcloud.ServerType{Name: n.instanceType},
 		Image:            n.manager.image,

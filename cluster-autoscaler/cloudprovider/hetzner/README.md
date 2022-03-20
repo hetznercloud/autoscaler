@@ -6,7 +6,9 @@ The cluster autoscaler for Hetzner Cloud scales worker nodes.
 
 `HCLOUD_TOKEN` Required Hetzner Cloud token.
 
-`HCLOUD_CLOUD_INIT` Base64 encoded Cloud Init yaml with commands to join the cluster, Sample [examples/cloud-init.txt for (Kubernetes 1.20.1)](examples/cloud-init.txt)
+`HCLOUD_CLOUD_INIT` (Optional) Base64 encoded Cloud Init yaml with commands to join the cluster, Sample [examples/cloud-init.txt for (Kubernetes 1.20.1)](examples/cloud-init.txt)
+
+`HCLOUD_CLOUD_INIT_FILE` (Optional) Path to a cloud-init file, which will be injected into created servers. Only used if `HCLOUD_CLOUD_INIT` is not set.
 
 `HCLOUD_IMAGE` Defaults to `ubuntu-20.04`, @see https://docs.hetzner.cloud/#images. You can also use an image ID here (e.g. `15512617`), or a label selector associated with a custom snapshot (e.g. `customized_ubuntu=true`). The most recent snapshot will be used in the latter case.
 

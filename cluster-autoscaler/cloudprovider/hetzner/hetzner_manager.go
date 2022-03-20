@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -40,7 +41,7 @@ type hetznerManager struct {
 	client         *hcloud.Client
 	nodeGroups     map[string]*hetznerNodeGroup
 	apiCallContext context.Context
-	cloudInit      string
+	cloudInitFunc  func() (string, error)
 	image          *hcloud.Image
 	sshKey         *hcloud.SSHKey
 	network        *hcloud.Network
@@ -53,17 +54,31 @@ func newManager() (*hetznerManager, error) {
 		return nil, errors.New("`HCLOUD_TOKEN` is not specified")
 	}
 
-	cloudInitBase64 := os.Getenv("HCLOUD_CLOUD_INIT")
-	if cloudInitBase64 == "" {
-		return nil, errors.New("`HCLOUD_CLOUD_INIT` is not specified")
+	cloudInitFunc := func() (string, error) {
+		return "", nil
+	}
+
+	if cloudInitBase64 := os.Getenv("HCLOUD_CLOUD_INIT"); cloudInitBase64 != "" {
+		cloudInit, err := base64.StdEncoding.DecodeString(cloudInitBase64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse cloud init error: %s", err)
+		}
+		cloudInitFunc = func() (string, error) {
+			return string(cloudInit), nil
+		}
+	}
+	if cloudInitFile := os.Getenv("HCLOUD_CLOUD_INIT_FILE"); cloudInitFile != "" {
+		cloudInitFunc = func() (string, error) {
+			if b, err := ioutil.ReadFile(cloudInitFile); err != nil {
+				return "", fmt.Errorf("error reading `HCLOUD_CLOUD_INIT_FILE`: %w", err)
+			} else {
+				return string(b), nil
+			}
+		}
 	}
 
 	client := hcloud.NewClient(hcloud.WithToken(token))
 	ctx := context.Background()
-	cloudInit, err := base64.StdEncoding.DecodeString(cloudInitBase64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse cloud init error: %s", err)
-	}
 
 	imageName := os.Getenv("HCLOUD_IMAGE")
 	if imageName == "" {
@@ -124,7 +139,7 @@ func newManager() (*hetznerManager, error) {
 	m := &hetznerManager{
 		client:         client,
 		nodeGroups:     make(map[string]*hetznerNodeGroup),
-		cloudInit:      string(cloudInit),
+		cloudInitFunc:  cloudInitFunc,
 		image:          image,
 		sshKey:         sshKey,
 		network:        network,
