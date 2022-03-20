@@ -363,12 +363,8 @@ func createServer(n *hetznerNodeGroup) error {
 			nodeGroupLabel: n.id,
 		},
 	}
-	if n.manager.sshKey != nil {
-		opts.SSHKeys = []*hcloud.SSHKey{n.manager.sshKey}
-	}
-	if n.manager.network != nil {
-		opts.Networks = []*hcloud.Network{n.manager.network}
-	}
+	opts.SSHKeys = n.manager.sshKeys
+	opts.Networks = n.manager.networks
 
 	serverCreateResult, _, err := n.manager.client.Server.Create(n.manager.apiCallContext, opts)
 	if err != nil {

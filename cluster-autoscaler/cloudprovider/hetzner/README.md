@@ -12,9 +12,9 @@ The cluster autoscaler for Hetzner Cloud scales worker nodes.
 
 `HCLOUD_IMAGE` Defaults to `ubuntu-20.04`, @see https://docs.hetzner.cloud/#images. You can also use an image ID here (e.g. `15512617`), or a label selector associated with a custom snapshot (e.g. `customized_ubuntu=true`). The most recent snapshot will be used in the latter case.
 
-`HCLOUD_NETWORK` Default empty , The name of the network that is used in the cluster , @see https://docs.hetzner.cloud/#networks
+`HCLOUD_NETWORK` (Optional) Comma-separated list of networks that will be connected to created servers, @see https://docs.hetzner.cloud/#networks
 
-`HCLOUD_SSH_KEY` Default empty , This SSH Key will have access to the fresh created server, @see https://docs.hetzner.cloud/#ssh-keys
+`HCLOUD_SSH_KEY` (Optional) Comma-separated list of ssh-keys that will have access to created servers, @see https://docs.hetzner.cloud/#ssh-keys
 
 Node groups must be defined with the `--nodes=<min-servers>:<max-servers>:<instance-type>:<region>:<name>` flag.
 

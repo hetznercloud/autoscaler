@@ -43,8 +43,8 @@ type hetznerManager struct {
 	apiCallContext context.Context
 	cloudInitFunc  func() (string, error)
 	image          *hcloud.Image
-	sshKey         *hcloud.SSHKey
-	network        *hcloud.Network
+	sshKeys        []*hcloud.SSHKey
+	networks       []*hcloud.Network
 	createTimeout  time.Duration
 }
 
@@ -110,24 +110,28 @@ func newManager() (*hetznerManager, error) {
 		image = images[0]
 	}
 
-	var network *hcloud.Network
-	networkName := os.Getenv("HCLOUD_NETWORK")
-
-	var sshKey *hcloud.SSHKey
-	sshKeyName := os.Getenv("HCLOUD_SSH_KEY")
-	if sshKeyName != "" {
-		sshKey, _, err = client.SSHKey.Get(ctx, sshKeyName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get ssh key error: %s", err)
+	var networks []*hcloud.Network
+	for _, networkName := range strings.Split(os.Getenv("HCLOUD_NETWORK"), ",") {
+		networkName = strings.TrimSpace(networkName)
+		if networkName != "" {
+			network, _, err := client.Network.Get(ctx, networkName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get network error: %s", err)
+			}
+			networks = append(networks, network)
 		}
 	}
 
-	if networkName != "" {
-		network, _, err = client.Network.Get(ctx, networkName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get network error: %s", err)
+	var sshKeys []*hcloud.SSHKey
+	for _, sshKeyName := range strings.Split(os.Getenv("HCLOUD_SSH_KEY"), ",") {
+		sshKeyName = strings.TrimSpace(sshKeyName)
+		if sshKeyName != "" {
+			sshKey, _, err := client.SSHKey.Get(ctx, sshKeyName)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get ssh key error: %s", err)
+			}
+			sshKeys = append(sshKeys, sshKey)
 		}
-
 	}
 
 	createTimeout := serverCreateTimeoutDefault
@@ -141,8 +145,8 @@ func newManager() (*hetznerManager, error) {
 		nodeGroups:     make(map[string]*hetznerNodeGroup),
 		cloudInitFunc:  cloudInitFunc,
 		image:          image,
-		sshKey:         sshKey,
-		network:        network,
+		sshKeys:        sshKeys,
+		networks:       networks,
 		createTimeout:  createTimeout,
 		apiCallContext: ctx,
 	}
