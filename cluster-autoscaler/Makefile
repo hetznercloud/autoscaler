@@ -1,4 +1,4 @@
-ALL_ARCH = amd64 arm64 s390x
+ALL_ARCH = amd64 arm64
 all: $(addprefix build-arch-,$(ALL_ARCH))
 
 TAG?=dev
@@ -54,11 +54,11 @@ make-image: make-image-arch-$(GOARCH)
 make-image-arch-%:
 ifdef BASEIMAGE
 	docker build --pull --build-arg BASEIMAGE=${BASEIMAGE} \
-		-t ${IMAGE}-$*:${TAG} \
+		-t ${IMAGE}:${TAG}-$* \
 		-f Dockerfile.$* .
 else
 	docker build --pull \
-		-t ${IMAGE}-$*:${TAG} \
+		-t ${IMAGE}:${TAG}-$* \
 		-f Dockerfile.$* .
 endif
 	@echo "Image ${TAG}${FOR_PROVIDER}-$* completed"
@@ -66,11 +66,11 @@ endif
 push-image: push-image-arch-$(GOARCH)
 
 push-image-arch-%:
-	./push_image.sh ${IMAGE}-$*:${TAG}
+	./push_image.sh ${IMAGE}:${TAG}-$*
 
 push-manifest:
 	docker manifest create ${IMAGE}:${TAG} \
-	    $(addprefix $(REGISTRY)/cluster-autoscaler$(PROVIDER)-, $(addsuffix :$(TAG), $(ALL_ARCH)))
+	    $(addprefix $(REGISTRY)/cluster-autoscaler$(PROVIDER):$(TAG)-, $(ALL_ARCH))
 	docker manifest push --purge ${IMAGE}:${TAG}
 
 execute-release: $(addprefix make-image-arch-,$(ALL_ARCH)) $(addprefix push-image-arch-,$(ALL_ARCH)) push-manifest
