@@ -1,0 +1,20 @@
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: cluster-autoscaler-hetzner
+build:
+  artifacts:
+    - image: registry.k8s.io/autoscaling/cluster-autoscaler
+      context: ../../
+      ko:
+        flags:
+          - -tags=hetzner
+
+  local:
+    useBuildkit: true
+  insecureRegistries:
+    - localhost:30666
+manifests:
+  kustomize:
+    paths:
+      - examples/
